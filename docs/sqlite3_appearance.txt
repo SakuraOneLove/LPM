@@ -1,0 +1,3 @@
+Parameters for opened database:
+* .headers on
+* .mode column
