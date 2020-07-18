@@ -74,7 +74,6 @@ def insert_into_table(database_name: str, **query_params) -> int:
         else:
             sql_requst = "insert into vault (name, login, password)\
                 values ('{}', '{}', '{}');".format(name, login, password)
-        database_logger(LOG_NAME, "SQL: {}".format(sql_requst))
         cursor.execute(sql_requst)
         connection.commit()
     except KeyError:
@@ -83,9 +82,33 @@ def insert_into_table(database_name: str, **query_params) -> int:
     connection.close()
     return exit_code
 
+def select_row_by_name(database_name: str, row_name: str) -> list:
+    """Select all rows where name in table 'vault' equal
+    name in 'row_name' and return list of dicts.
+    """
+    sql_requst = "select * from vault where name = '{}';".format(row_name)
+    connection = sqlite3.connect(database_name)
+    cursor = connection.cursor()
+    cursor.execute(sql_requst)
+    # Rows - all rows in a table where name equal with 'row_name'
+    rows = cursor.fetchall()
+    if len(rows) > 0:
+        named_rows = [make_dict_from_tuple(el) for el in rows]
+    else:
+        named_rows = []
+        database_logger(LOG_NAME, "Warning: Row '{}' doesn't exists in table".format(row_name))
+    return named_rows
+
 def database_logger(file_name: str, message: str):
     """Logging database operations with time of executing operation to log file."""
     tzmsk = pytz.timezone("Europe/Moscow")
     time_now = datetime.datetime.now(tz=tzmsk).strftime("[%Y-%m-%dT%H:%M:%S]")
     with open(file_name, "a") as log_file:
         log_file.write("{} {}\n".format(time_now, message))
+
+def make_dict_from_tuple(row: tuple) -> dict:
+    """Make dict for table 'vault' from tuple obtained
+    from select query.
+    """
+    dict_keys = ("id", "name", "login", "password", "note")
+    return dict(zip(dict_keys, row))
