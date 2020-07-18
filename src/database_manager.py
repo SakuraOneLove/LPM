@@ -96,8 +96,27 @@ def select_row_by_name(database_name: str, row_name: str) -> list:
         named_rows = [make_dict_from_tuple(el) for el in rows]
     else:
         named_rows = []
-        database_logger(LOG_NAME, "Warning: Row '{}' doesn't exists in table".format(row_name))
+        database_logger(LOG_NAME,\
+            "Warning: Row with name '{}' doesn't exists in table".format(row_name))
     return named_rows
+
+def select_row_by_login(database_name: str, row_login: str) -> list:
+    """Select all rows where login in table 'vault' equal
+    login in 'row_login' and return list of dicts.
+    """
+    sql_requst = "select * from vault where login = '{}';".format(row_login)
+    connection = sqlite3.connect(database_name)
+    cursor = connection.cursor()
+    cursor.execute(sql_requst)
+    # Rows - all rows in a table where name equal with 'row_login'
+    rows = cursor.fetchall()
+    if len(rows) > 0:
+        logined_rows = [make_dict_from_tuple(el) for el in rows]
+    else:
+        logined_rows = []
+        database_logger(LOG_NAME,\
+            "Warning: Row with login '{}' doesn't exists in table".format(row_login))
+    return logined_rows
 
 def database_logger(file_name: str, message: str):
     """Logging database operations with time of executing operation to log file."""

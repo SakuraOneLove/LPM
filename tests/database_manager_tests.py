@@ -4,6 +4,8 @@ import unittest
 from itertools import islice
 from src import database_manager
 
+DB_NAME = "tests/testdb.sqlite3"
+
 VAULT_TABLE_SQL = "create table if not exists vault (\
 account_id integer primary key,\
 name text not null,\
@@ -29,7 +31,7 @@ class TestExtraMethods(unittest.TestCase):
 
     def setUp(self):
         """Creating new database with tables."""
-        self.database_name = "tests/testdb.sqlite3"
+        self.database_name = DB_NAME
         self.table_name = "vault"
         self.table_name2 = "shop"
         self.right_insert_dict = {'name': 'mail.ru', 'login': 'user@mail.ru',\
@@ -123,8 +125,30 @@ class TestExtraMethods(unittest.TestCase):
         # Try make select without results
         selected_rows = database_manager.select_row_by_name(self.database_name, "vodka")
         self.assertListEqual(selected_rows, [])
-        # Remove all tables after tests
-        self.drop_tables()
+
+    def test_selecting_rows_by_login(self):
+        """Checking selecting rows by given login."""
+        # Make query
+        selected_rows = database_manager.select_row_by_login(self.database_name,\
+            self.right_insert_dict['login'])
+        result_dict = dict(islice(selected_rows[0].items(), 1, 5))
+        # Check it
+        self.assertGreater(len(selected_rows), 0)
+        self.assertEqual(result_dict, self.right_insert_dict)
+        # Try make select without results
+        selected_rows = database_manager.select_row_by_login(self.database_name, "dummy")
+        self.assertListEqual(selected_rows, [])
+
+def drop_tables():
+    """Drop tables after tests.
+    It method should be called in the last method."""
+    connection = sqlite3.connect(DB_NAME)
+    cursor = connection.cursor()
+    cursor.execute(DROP_TABLE_VAULT)
+    cursor.execute(DROP_TABLE_SHOP)
+    connection.commit()
+    connection.close()
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(exit=False)
+    drop_tables()
