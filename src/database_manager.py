@@ -5,9 +5,10 @@
 * managment database log file with all manipulations.
 """
 import datetime
+import zoneinfo
 import sqlite3
 import os
-import pytz
+
 
 STORAGE_TABLE_SQL = "create table if not exists vault (\
 account_id integer primary key,\
@@ -118,10 +119,21 @@ def select_row_by_login(database_name: str, row_login: str) -> list:
             "Warning: Row with login '{}' doesn't exists in table".format(row_login))
     return logined_rows
 
+def update_row(database_name: str, **query_params) -> int:
+    """Updating existing row by passed args.
+    '**query_params' consist of: name, login, password, note and
+    new updating params: new_name, new_login, new_password, new_note.
+    
+    """
+
+
 def database_logger(file_name: str, message: str):
     """Logging database operations with time of executing operation to log file."""
-    tzmsk = pytz.timezone("Europe/Moscow")
-    time_now = datetime.datetime.now(tz=tzmsk).strftime("[%Y-%m-%dT%H:%M:%S]")
+    tzmsk = zoneinfo.ZoneInfo("Europe/Moscow")
+    time_now = datetime.datetime.now(tzmsk).strftime("[%Y-%m-%dT%H:%M:%S]")
+    # Check log/ dir exists. If not create dir.
+    if not os.path.isdir("log"):
+        os.mkdir("log")
     with open(file_name, "a") as log_file:
         log_file.write("{} {}\n".format(time_now, message))
 
